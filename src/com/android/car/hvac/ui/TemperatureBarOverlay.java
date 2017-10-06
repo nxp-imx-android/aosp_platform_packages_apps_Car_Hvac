@@ -36,6 +36,7 @@ import java.util.List;
  * An expandable temperature control bar. Note this UI is meant to only support Fahrenheit.
  */
 public class TemperatureBarOverlay extends FrameLayout {
+
     /**
      * A listener that observes clicks on the temperature bar.
      */
@@ -106,17 +107,16 @@ public class TemperatureBarOverlay extends FrameLayout {
     @Override
     protected void onFinishInflate() {
         super.onFinishInflate();
-
         Resources res = getResources();
 
         mCollapsedHeight = res.getDimensionPixelSize(R.dimen.temperature_bar_collapsed_height);
         mExpandedHeight = res.getDimensionPixelSize(R.dimen.temperature_bar_expanded_height);
         // Push the collapsed circle all the way down to the bottom of the screen and leave
         // half of it visible.
-        mCollapsedYShift
-                = res.getDimensionPixelSize(R.dimen.car_hvac_panel_full_expanded_height)
-                - (mCollapsedHeight / 2);
-        mExpandedYShift = res.getDimensionPixelSize(R.dimen.hvac_panel_row_margin);
+        mCollapsedYShift = (mCollapsedHeight / 2);
+        // center of expanded panel. The extra nudge of the mCollapsedYShift is to make up for
+        // the fact that the gravity is set to bottom.
+        mExpandedYShift = mCollapsedYShift - ((mExpandedHeight - mCollapsedHeight)/ 2);
 
         mCollapsedWidth = res.getDimensionPixelSize(R.dimen.temperature_bar_width_collapsed);
         mExpandedWidth = res.getDimensionPixelSize(R.dimen.temperature_bar_width_expanded);
@@ -131,12 +131,12 @@ public class TemperatureBarOverlay extends FrameLayout {
 
         mOffColor = res.getColor(R.color.hvac_temperature_off_text_bg_color);
 
-        mIncreaseButton = (ImageView) findViewById(R.id.increase_button);
-        mDecreaseButton = (ImageView) findViewById(R.id.decrease_button);
+        mIncreaseButton = findViewById(R.id.increase_button);
+        mDecreaseButton = findViewById(R.id.decrease_button);
 
-        mFloatingText = (TextView) findViewById(R.id.floating_temperature_text);
-        mText = (TextView) findViewById(R.id.temperature_text);
-        mOffText = (TextView) findViewById(R.id.temperature_off_text);
+        mFloatingText = findViewById(R.id.floating_temperature_text);
+        mText = findViewById(R.id.temperature_text);
+        mOffText = findViewById(R.id.temperature_off_text);
 
         mTemperatureBar = findViewById(R.id.temperature_bar);
         mTemperatureBar.setTranslationY(mCollapsedYShift);
@@ -170,6 +170,7 @@ public class TemperatureBarOverlay extends FrameLayout {
     public void setBarOnClickListener(OnClickListener l) {
         mFloatingText.setOnClickListener(l);
         mTemperatureBar.setOnClickListener(l);
+        setOnClickListener(l);
     }
 
     public void setCloseButtonOnClickListener(OnClickListener l) {
@@ -177,7 +178,7 @@ public class TemperatureBarOverlay extends FrameLayout {
     }
 
     public AnimatorSet getExpandAnimatons() {
-        List<Animator> list = new ArrayList();
+        List<Animator> list = new ArrayList<>();
         AnimatorSet animation = new AnimatorSet();
         if (mIsOpen) {
             return animation;
@@ -189,12 +190,12 @@ public class TemperatureBarOverlay extends FrameLayout {
         list.add(getAlphaAnimator(mFloatingText, true /* fade */,
                 TEXT_ALPHA_FADE_OUT_ANIMATION_TIME_MS));
 
-        ValueAnimator widthAnimator = new ValueAnimator().ofInt(mCollapsedWidth, mExpandedWidth)
+        ValueAnimator widthAnimator = ValueAnimator.ofInt(mCollapsedWidth, mExpandedWidth)
                 .setDuration(EXPAND_ANIMATION_TIME_MS);
         widthAnimator.addUpdateListener(mWidthUpdateListener);
         list.add(widthAnimator);
 
-        ValueAnimator heightAnimator = new ValueAnimator().ofInt(mCollapsedHeight,
+        ValueAnimator heightAnimator = ValueAnimator.ofInt(mCollapsedHeight,
                 mExpandedHeight)
                 .setDuration(EXPAND_ANIMATION_TIME_MS);
         heightAnimator.addUpdateListener(mHeightUpdateListener);
@@ -202,7 +203,7 @@ public class TemperatureBarOverlay extends FrameLayout {
 
 
         ValueAnimator translationYAnimator
-                = new ValueAnimator().ofFloat(mCollapsedYShift, mExpandedYShift);
+                = ValueAnimator.ofFloat(mCollapsedYShift, mExpandedYShift);
         translationYAnimator.addUpdateListener(mTranslationYListener);
         list.add(translationYAnimator);
 
@@ -214,7 +215,7 @@ public class TemperatureBarOverlay extends FrameLayout {
 
     public AnimatorSet getCollapseAnimations() {
 
-        List<Animator> list = new ArrayList();
+        List<Animator> list = new ArrayList<>();
         AnimatorSet animation = new AnimatorSet();
 
         if (!mIsOpen) {
@@ -230,18 +231,18 @@ public class TemperatureBarOverlay extends FrameLayout {
 
         list.add(floatingTextAnimator);
 
-        ValueAnimator widthAnimator = new ValueAnimator().ofInt(mExpandedWidth, mCollapsedWidth)
+        ValueAnimator widthAnimator = ValueAnimator.ofInt(mExpandedWidth, mCollapsedWidth)
                 .setDuration(COLLAPSE_ANIMATION_TIME_MS);
         widthAnimator.addUpdateListener(mWidthUpdateListener);
         list.add(widthAnimator);
 
-        ValueAnimator heightAnimator = new ValueAnimator().ofInt(mExpandedHeight, mCollapsedHeight)
+        ValueAnimator heightAnimator = ValueAnimator.ofInt(mExpandedHeight, mCollapsedHeight)
                 .setDuration(COLLAPSE_ANIMATION_TIME_MS);
         heightAnimator.addUpdateListener(mHeightUpdateListener);
         list.add(heightAnimator);
 
         ValueAnimator translationYAnimator
-                = new ValueAnimator().ofFloat(mExpandedYShift, mCollapsedYShift);
+                = ValueAnimator.ofFloat(mExpandedYShift, mCollapsedYShift);
         translationYAnimator.addUpdateListener(mTranslationYListener);
         list.add(translationYAnimator);
 
@@ -416,10 +417,6 @@ public class TemperatureBarOverlay extends FrameLayout {
             ((GradientDrawable) mTemperatureBar.getBackground()).setColor(color);
         }
     };
-
-    private ObjectAnimator getAlphaAnimator(View view, boolean fade) {
-        return getAlphaAnimator(view, fade, EXPAND_ANIMATION_TIME_MS);
-    }
 
     private ObjectAnimator getAlphaAnimator(View view, boolean fade, int duration) {
 
