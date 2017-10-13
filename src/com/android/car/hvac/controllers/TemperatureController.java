@@ -22,33 +22,45 @@ import com.android.car.hvac.ui.TemperatureBarOverlay;
  * A controller that handles temperature updates for the driver and passenger.
  */
 public class TemperatureController {
-    private final TemperatureBarOverlay mDriverTempBar;
-    private final TemperatureBarOverlay mPassengerTempBar;
+    private final TemperatureBarOverlay mDriverTempBarExpanded;
+    private final TemperatureBarOverlay mPassengerTempBarExpanded;
+    private final TemperatureBarOverlay mDriverTempBarCollapsed;
+    private final TemperatureBarOverlay mPassengerTempBarCollapsed;
     private final HvacController mHvacController;
 
-    public TemperatureController(TemperatureBarOverlay passengerTemperatureBar,
-            TemperatureBarOverlay driverTemperatureBar, HvacController controller) {
-        mDriverTempBar = driverTemperatureBar;
-        mPassengerTempBar = passengerTemperatureBar;
+    //TODO: builder pattern for clarity
+    public TemperatureController(TemperatureBarOverlay passengerTemperatureBarExpanded,
+            TemperatureBarOverlay driverTemperatureBarExpanded,
+            TemperatureBarOverlay passengerTemperatureBarCollapsed,
+            TemperatureBarOverlay driverTemperatureBarCollapsed,
+            HvacController controller) {
+        mDriverTempBarExpanded = driverTemperatureBarExpanded;
+        mPassengerTempBarExpanded = passengerTemperatureBarExpanded;
+        mPassengerTempBarCollapsed = passengerTemperatureBarCollapsed;
+        mDriverTempBarCollapsed = driverTemperatureBarCollapsed;
         mHvacController = controller;
 
         mHvacController.registerCallback(mCallback);
-        mDriverTempBar.setTemperatureChangeListener(mDriverTempClickListener);
-        mPassengerTempBar.setTemperatureChangeListener(mPassengerTempClickListener);
+        mDriverTempBarExpanded.setTemperatureChangeListener(mDriverTempClickListener);
+        mPassengerTempBarExpanded.setTemperatureChangeListener(mPassengerTempClickListener);
 
-        mDriverTempBar.setTemperature(mHvacController.getDriverTemperature());
-        mPassengerTempBar.setTemperature(mHvacController.getPassengerTemperature());
+        mDriverTempBarExpanded.setTemperature(mHvacController.getDriverTemperature());
+        mDriverTempBarCollapsed.setTemperature(mHvacController.getDriverTemperature());
+        mPassengerTempBarExpanded.setTemperature(mHvacController.getPassengerTemperature());
+        mPassengerTempBarCollapsed.setTemperature(mHvacController.getPassengerTemperature());
     }
 
     private final HvacController.Callback mCallback = new HvacController.Callback() {
         @Override
         public void onPassengerTemperatureChange(float temp) {
-            mPassengerTempBar.setTemperature((int) temp);
+            mPassengerTempBarExpanded.setTemperature((int) temp);
+            mPassengerTempBarCollapsed.setTemperature((int) temp);
         }
 
         @Override
         public void onDriverTemperatureChange(float temp) {
-            mDriverTempBar.setTemperature((int) temp);
+            mDriverTempBarExpanded.setTemperature((int) temp);
+            mDriverTempBarCollapsed.setTemperature((int) temp);
         }
     };
 
@@ -57,6 +69,7 @@ public class TemperatureController {
                 @Override
                 public void onTemperatureChanged(int temperature) {
                     mHvacController.setPassengerTemperature(temperature);
+                    mPassengerTempBarCollapsed.setTemperature(temperature);
                 }
             };
 
@@ -65,6 +78,7 @@ public class TemperatureController {
                 @Override
                 public void onTemperatureChanged(int temperature) {
                     mHvacController.setDriverTemperature(temperature);
+                    mDriverTempBarCollapsed.setTemperature(temperature);
                 }
             };
 }

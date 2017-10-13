@@ -22,10 +22,10 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
+import android.os.Handler;
 import android.support.annotation.IntDef;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import com.android.car.hvac.HvacController;
@@ -56,6 +56,18 @@ public class HvacPanelController {
     private static final int STATE_COLLAPSED = 0;
     private static final int STATE_COLLAPSED_DIMMED = 1;
     private static final int STATE_FULL_EXPANDED = 2;
+    // Allows for delayed invocation of code. Thus we can control UI events to happen after
+    // others. Example: set something visible but do it after we've complete current UI updates.
+    private static Handler handler = new Handler();
+
+    // We have both a collapsed and expanded version of the overlays due to a bug
+    // that does not correctly rendering a window resize event. Thus we toggle the the visibility
+    // of the windows instead. A better solution would be a having separate views collapsed state
+    // since the it does not need the other elements but this works for now.
+    private TemperatureBarOverlay mDriverTemperatureBarCollapsed;
+    private TemperatureBarOverlay mPassengerTemperatureBarCollapsed;
+    private TemperatureBarOverlay mDriverTemperatureBarExpanded;
+    private TemperatureBarOverlay mPassengerTemperatureBarExpanded;
 
     @IntDef({STATE_COLLAPSED,
             STATE_COLLAPSED_DIMMED,
@@ -69,12 +81,6 @@ public class HvacPanelController {
 
     private View mPanel;
     private View mContainer;
-
-    private TemperatureBarOverlay mDriverTemperature;
-    private TemperatureBarOverlay mPassengerTemperature;
-
-    private ViewGroup mDriverTemperatureTouchOverlay;
-    private ViewGroup mPassengerTemperatureTouchOverlay;
 
     private SeatWarmerButton mDriverSeatWarmer;
     private SeatWarmerButton mPassengerSeatWarmer;
@@ -108,6 +114,7 @@ public class HvacPanelController {
     private FanSpeedBarController mFanSpeedBarController;
     private FanDirectionButtonsController mFanDirectionButtonsController;
     private TemperatureController mTemperatureController;
+    private TemperatureController mTemperatureControllerCollapsed;
     private SeatWarmerController mSeatWarmerController;
 
     private boolean mInAnimation;
@@ -117,9 +124,13 @@ public class HvacPanelController {
     private boolean mAutoMode;
 
     public HvacPanelController(Context context, View container,
-            WindowManager windowManager, TemperatureBarOverlay driverTemperature,
-            TemperatureBarOverlay passengerTemperature, ViewGroup driverTemperatureBarTouchOverlay,
-            ViewGroup passengerTemperatureBarTouchOverlay) {
+            WindowManager windowManager,
+            TemperatureBarOverlay driverTemperatureExpanded,
+            TemperatureBarOverlay passengerTemperatureExpanded,
+            TemperatureBarOverlay driverTemperatureBarCollapsed,
+            TemperatureBarOverlay passengerTemperatureBarCollapsed) {
+        mDriverTemperatureBarCollapsed = driverTemperatureBarCollapsed;
+        mPassengerTemperatureBarCollapsed = passengerTemperatureBarCollapsed;
 
         mCurrentState = STATE_COLLAPSED;
         mWindowManager = windowManager;
@@ -132,32 +143,29 @@ public class HvacPanelController {
         mAutoOffDrawable = res.getDrawable(R.drawable.ic_auto_off);
         mAutoOnDrawable = res.getDrawable(R.drawable.ic_auto_on);
 
-        mDriverTemperature = driverTemperature;
-        mDriverTemperature.setBarOnClickListener(mPanelClickListener);
+        mDriverTemperatureBarExpanded = driverTemperatureExpanded;
+        mDriverTemperatureBarExpanded.setBarOnClickListener(mCollapseHvac);
 
-        mPassengerTemperature = passengerTemperature;
-        mPassengerTemperature.setBarOnClickListener(mPanelClickListener);
+        mPassengerTemperatureBarExpanded = passengerTemperatureExpanded;
+        mPassengerTemperatureBarExpanded.setBarOnClickListener(mCollapseHvac);
 
-        mDriverTemperature.setCloseButtonOnClickListener(mOpenCloseToggleListener);
-        mPassengerTemperature.setCloseButtonOnClickListener(mOpenCloseToggleListener);
+        mDriverTemperatureBarExpanded.setCloseButtonOnClickListener(mCollapseHvac);
+        mPassengerTemperatureBarExpanded.setCloseButtonOnClickListener(mCollapseHvac);
 
-        // Initially the hvac panel is collapsed, disable touches on the overlay container.
-        disableTouchOnOverlay(mDriverTemperature);
-        disableTouchOnOverlay(mPassengerTemperature);
+        // Initially the hvac panel is collapsed, hide the expanded version.
+        mDriverTemperatureBarExpanded.setVisibility(View.INVISIBLE);
+        mPassengerTemperatureBarExpanded.setVisibility(View.INVISIBLE);
 
-        mDriverTemperatureTouchOverlay = driverTemperatureBarTouchOverlay;
-        mPassengerTemperatureTouchOverlay = passengerTemperatureBarTouchOverlay;
-
-        mDriverTemperatureTouchOverlay.setOnClickListener(mOpenCloseToggleListener);
-        mPassengerTemperatureTouchOverlay.setOnClickListener(mOpenCloseToggleListener);
+        mPassengerTemperatureBarCollapsed.setBarOnClickListener(mExpandHvac);
+        mDriverTemperatureBarCollapsed.setBarOnClickListener(mExpandHvac);
 
         mContainer = container;
         mContainer.setVisibility(View.INVISIBLE);
-        mContainer.setOnClickListener(mOpenCloseToggleListener);
+        mContainer.setOnClickListener(mCollapseHvac);
         mPanel = mContainer.findViewById(R.id.hvac_center_panel);
 
         mHvacFanControlBackground = mPanel.findViewById(R.id.fan_control_bg);
-        mPanel.setOnClickListener(mPanelClickListener);
+        mPanel.setOnClickListener(mCollapseHvac);
 
         // Set up top row buttons
         mPanelTopRow = (HvacPanelRow) mContainer.findViewById(R.id.top_row);
@@ -200,8 +208,12 @@ public class HvacPanelController {
         mFanSpeedBarController = new FanSpeedBarController(mFanSpeedBar, mHvacController);
         mFanDirectionButtonsController
                 = new FanDirectionButtonsController(mFanDirectionButtons, mHvacController);
-        mTemperatureController = new TemperatureController(mPassengerTemperature,
-                mDriverTemperature, mHvacController);
+        mTemperatureController = new TemperatureController(
+                mPassengerTemperatureBarExpanded,
+                mDriverTemperatureBarExpanded,
+                mPassengerTemperatureBarCollapsed,
+                mDriverTemperatureBarCollapsed,
+                mHvacController);
         mSeatWarmerController = new SeatWarmerController(mPassengerSeatWarmer,
                 mDriverSeatWarmer, mHvacController);
 
@@ -282,8 +294,10 @@ public class HvacPanelController {
                 transitionState(STATE_FULL_EXPANDED, STATE_COLLAPSED);
             }
 
-            mDriverTemperature.setIsOn(mHvacIsOn);
-            mPassengerTemperature.setIsOn(mHvacIsOn);
+            mDriverTemperatureBarExpanded.setIsOn(mHvacIsOn);
+            mPassengerTemperatureBarExpanded.setIsOn(mHvacIsOn);
+            mDriverTemperatureBarCollapsed.setIsOn(mHvacIsOn);
+            mPassengerTemperatureBarCollapsed.setIsOn(mHvacIsOn);
         }
     };
 
@@ -347,9 +361,9 @@ public class HvacPanelController {
                 animationList.add(panelAlphaAnimator);
 
                 combineAnimationSet(animationList, listenerList,
-                        mDriverTemperature.getCollapseAnimations());
+                        mDriverTemperatureBarExpanded.getCollapseAnimations());
                 combineAnimationSet(animationList, listenerList,
-                        mPassengerTemperature.getCollapseAnimations());
+                        mPassengerTemperatureBarExpanded.getCollapseAnimations());
 
                 combineAnimationSet(animationList, listenerList,
                         mPanelTopRow.getCollapseAnimation(PANEL_ANIMATION_DELAY_MS,
@@ -376,9 +390,9 @@ public class HvacPanelController {
 
                 animationList.add(heightAnimator);
                 combineAnimationSet(animationList, listenerList,
-                        mDriverTemperature.getExpandAnimatons());
+                        mDriverTemperatureBarExpanded.getExpandAnimatons());
                 combineAnimationSet(animationList, listenerList,
-                        mPassengerTemperature.getExpandAnimatons());
+                        mPassengerTemperatureBarExpanded.getExpandAnimatons());
 
                 // During expansion, the bottom panel animation should be delayed
                 combineAnimationSet(animationList, listenerList,
@@ -468,24 +482,6 @@ public class HvacPanelController {
         mPanelTopRow.setAlpha(mTopPanelMaxAlpha);
     }
 
-    private View.OnClickListener mPanelClickListener = new View.OnClickListener() {
-        @Override
-        public void onClick(View v) {
-            if (!mHvacIsOn) {
-                return;
-            }
-            switch (mCurrentState) {
-                case STATE_COLLAPSED:
-                    transitionState(STATE_COLLAPSED, STATE_FULL_EXPANDED);
-                    break;
-                case STATE_COLLAPSED_DIMMED:
-                    transitionState(mCurrentState, STATE_COLLAPSED);
-                    break;
-                default:
-            }
-        }
-    };
-
     private View.OnClickListener mAutoButtonClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
@@ -499,19 +495,30 @@ public class HvacPanelController {
         }
     };
 
-    private View.OnClickListener mOpenCloseToggleListener = new View.OnClickListener() {
+     private View.OnClickListener mCollapseHvac = new View.OnClickListener() {
+         @Override
+         public void onClick(View v) {
+             if (mInAnimation) {
+                 return;
+             }
+             if (mCurrentState != STATE_COLLAPSED) {
+                 transitionState(mCurrentState, STATE_COLLAPSED);
+             }
+         }
+     };
+
+    private View.OnClickListener mExpandHvac = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            if (!mHvacIsOn) {
+             if (!mHvacIsOn || mInAnimation) {
                 return;
             }
-            if (mCurrentState == STATE_FULL_EXPANDED) {
-                transitionState(mCurrentState, STATE_COLLAPSED);
-            } else if (mCurrentState == STATE_COLLAPSED) {
+            if (mCurrentState != STATE_FULL_EXPANDED) {
                 transitionState(mCurrentState, STATE_FULL_EXPANDED);
             }
         }
     };
+
 
     private ValueAnimator.AnimatorUpdateListener mHeightUpdateListener
             = new ValueAnimator.AnimatorUpdateListener() {
@@ -541,32 +548,26 @@ public class HvacPanelController {
         public void onTransitionStart() {
             mInAnimation = true;
             if (mEndState == STATE_FULL_EXPANDED) {
+                mPassengerTemperatureBarExpanded.setVisibility(View.VISIBLE);
+                mDriverTemperatureBarExpanded.setVisibility(View.VISIBLE);
+                mDriverTemperatureBarCollapsed.setVisibility(View.INVISIBLE);
+                mPassengerTemperatureBarCollapsed.setVisibility(View.INVISIBLE);
                 mContainer.setAlpha(1);
                 mContainer.setVisibility(View.VISIBLE);
-            } else if (mStartState == STATE_FULL_EXPANDED) {
-                // Finished transitioning out of the fully expanded panel. Make the HVAC container
-                // and temperature bars not touchable so clicks on the screen bar are not intercepted.
-                disableTouchOnOverlay(mContainer);
-                disableTouchOnOverlay(mDriverTemperature);
-                disableTouchOnOverlay(mPassengerTemperature);
             }
         }
 
         public void onTransitionComplete() {
+            if (mEndState == STATE_COLLAPSED) {
+                mDriverTemperatureBarCollapsed.setVisibility(View.VISIBLE);
+                mPassengerTemperatureBarCollapsed.setVisibility(View.VISIBLE);
+                handler.postAtFrontOfQueue(() -> {
+                    mDriverTemperatureBarExpanded.setVisibility(View.INVISIBLE);
+                    mPassengerTemperatureBarExpanded.setVisibility(View.INVISIBLE);
+                });
+            }
             if (mStartState == STATE_FULL_EXPANDED) {
                 mContainer.setVisibility(View.INVISIBLE);
-
-                enableTouchOnOverlay(mDriverTemperatureTouchOverlay);
-                enableTouchOnOverlay(mPassengerTemperatureTouchOverlay);
-            } else if (mEndState == STATE_FULL_EXPANDED) {
-                // Finished transitioning into the fully expanded HVAC panel, make the
-                // container and temperature bars touchable since it covers the screen.
-                enableTouchOnOverlay(mContainer);
-                enableTouchOnOverlay(mDriverTemperature);
-                enableTouchOnOverlay(mPassengerTemperature);
-
-                disableTouchOnOverlay(mDriverTemperatureTouchOverlay);
-                disableTouchOnOverlay(mPassengerTemperatureTouchOverlay);
             }
 
             // set new states
@@ -574,25 +575,4 @@ public class HvacPanelController {
             mInAnimation = false;
         }
     }
-
-    private void disableTouchOnOverlay(View view) {
-        WindowManager.LayoutParams params
-                = (WindowManager.LayoutParams) view.getLayoutParams();
-        params.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                | WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE
-                | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                & ~WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
-        mWindowManager.updateViewLayout(view, params);
-    }
-
-    private void enableTouchOnOverlay(View view) {
-        WindowManager.LayoutParams params
-                = (WindowManager.LayoutParams) view.getLayoutParams();
-        params.flags =
-                WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE
-                        | WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
-                        & ~WindowManager.LayoutParams.FLAG_WATCH_OUTSIDE_TOUCH;
-        mWindowManager.updateViewLayout(view, params);
-    }
-
 }
