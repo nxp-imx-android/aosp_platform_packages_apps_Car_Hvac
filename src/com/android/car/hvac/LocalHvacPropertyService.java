@@ -55,7 +55,7 @@ public class LocalHvacPropertyService {
     private static final boolean DEFAULT_AC_ON = true;
     private static final boolean DEFAULT_AUTO_MODE = false;
     private static final int DEFAULT_FAN_SPEED = 3;
-    private static final int DEFAULT_FAN_POSITION = 2;
+    private static final int DEFAULT_FAN_DIRECTION = 2;
     private static final float DEFAULT_DRIVER_TEMP = 16;
     private static final float DEFAULT_PASSENGER_TEMP = 25;
 
@@ -130,8 +130,8 @@ public class LocalHvacPropertyService {
 
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT,
                 VehicleZone.ZONE_ROW_1_ALL), DEFAULT_FAN_SPEED);
-        mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_POSITION,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_FAN_POSITION);
+        mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_DIRECTION,
+                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_FAN_DIRECTION);
 
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_TEMP_SETPOINT,
                 DRIVER_ZONE_ID), DEFAULT_DRIVER_TEMP);
