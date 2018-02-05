@@ -46,9 +46,9 @@ public class HvacController extends Service {
     private static final int PASSENGER_ZONE_ID = VehicleSeat.SEAT_ROW_1_RIGHT;
 
     public static final int[] AIRFLOW_STATES = new int[]{
-            CarHvacManager.FAN_POSITION_FACE,
-            CarHvacManager.FAN_POSITION_FLOOR,
-            CarHvacManager.FAN_POSITION_FACE_AND_FLOOR
+            CarHvacManager.FAN_DIRECTION_FACE,
+            CarHvacManager.FAN_DIRECTION_FLOOR,
+            (CarHvacManager.FAN_DIRECTION_FACE | CarHvacManager.FAN_DIRECTION_FLOOR)
     };
 
     /**
@@ -201,7 +201,7 @@ public class HvacController extends Service {
                         case CarHvacManager.ID_ZONED_AC_ON:
                             handleAcStateUpdate(getValue(val));
                             break;
-                        case CarHvacManager.ID_ZONED_FAN_POSITION:
+                        case CarHvacManager.ID_ZONED_FAN_DIRECTION:
                             handleFanPositionUpdate(areaId, getValue(val));
                             break;
                         case CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT:
@@ -644,7 +644,7 @@ public class HvacController extends Service {
         if (mHvacManager != null) {
             zone = VehicleZone.ZONE_ROW_1_ALL; // Car specific workaround.
             try {
-                int val = mHvacManager.getIntProperty(CarHvacManager.ID_ZONED_FAN_POSITION, zone);
+                int val = mHvacManager.getIntProperty(CarHvacManager.ID_ZONED_FAN_DIRECTION, zone);
                 mDataStore.setAirflow(zone, fanPositionToAirflowIndex(val));
             } catch (android.car.CarNotConnectedException e) {
                 Log.e(TAG, "Car not connected in fetchAirFlow");
@@ -674,7 +674,7 @@ public class HvacController extends Service {
                 if (mHvacManager != null) {
                     try {
                         mHvacManager.setIntProperty(
-                                CarHvacManager.ID_ZONED_FAN_POSITION, zone, direction);
+                                CarHvacManager.ID_ZONED_FAN_DIRECTION, zone, direction);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setAirflowIndex");
                     }
