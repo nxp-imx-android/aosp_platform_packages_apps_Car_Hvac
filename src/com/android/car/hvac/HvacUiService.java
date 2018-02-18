@@ -16,9 +16,11 @@
 package com.android.car.hvac;
 
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.res.Resources;
 import android.graphics.PixelFormat;
@@ -42,6 +44,8 @@ import java.util.List;
  * Creates a sliding panel for HVAC controls and adds it to the window manager above SystemUI.
  */
 public class HvacUiService extends Service {
+    public static final String CAR_INTENT_ACTION_TOGGLE_HVAC_CONTROLS =
+            "android.car.intent.action.TOGGLE_HVAC_CONTROLS";
     private static final String TAG = "HvacUiService";
 
     private final List<View> mAddedViews = new ArrayList<>();
@@ -84,6 +88,7 @@ public class HvacUiService extends Service {
     @Override
     public void onCreate() {
         Resources res = getResources();
+        boolean showCollapsed = res.getBoolean(R.bool.config_showCollapsedBars);
         mPanelCollapsedHeight = res.getDimensionPixelSize(R.dimen.car_hvac_panel_collapsed_height);
         mPanelFullExpandedHeight
                 = res.getDimensionPixelSize(R.dimen.car_hvac_panel_full_expanded_height);
@@ -102,7 +107,8 @@ public class HvacUiService extends Service {
         mScreenWidth = mDisplayMetrics.widthPixels;
 
         int identifier = res.getIdentifier("navigation_bar_height_car_mode", "dimen", "android");
-        mNavBarHeight = (identifier > 0)? res.getDimensionPixelSize(identifier) : 0;
+        mNavBarHeight = (identifier > 0 && showCollapsed) ?
+                res.getDimensionPixelSize(identifier) : 0;
 
         WindowManager.LayoutParams testparams = new WindowManager.LayoutParams(
                 WindowManager.LayoutParams.MATCH_PARENT,
@@ -129,7 +135,11 @@ public class HvacUiService extends Service {
             }
         };
         addViewToWindowManagerAndTrack(windowSizeTest, testparams);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(CAR_INTENT_ACTION_TOGGLE_HVAC_CONTROLS);
+        registerReceiver(mBroadcastReceiver, filter);
     }
+
 
     /**
      * Called after the mInitialYOffset is determined. This does a layout of all components needed
@@ -215,6 +225,15 @@ public class HvacUiService extends Service {
         mWindowManager.updateViewLayout(v, lp);
     }
 
+    private BroadcastReceiver mBroadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if(action.equals(CAR_INTENT_ACTION_TOGGLE_HVAC_CONTROLS)){
+                mHvacPanelController.toggleHvacUi();
+            }
+        }
+    };
 
     @Override
     public void onDestroy() {
@@ -225,6 +244,7 @@ public class HvacUiService extends Service {
         if(mHvacController != null){
             unbindService(mServiceConnection);
         }
+        unregisterReceiver(mBroadcastReceiver);
     }
 
     private ServiceConnection mServiceConnection = new ServiceConnection() {
@@ -317,5 +337,4 @@ public class HvacUiService extends Service {
             Log.e(TAG, "Error disabling animation");
         }
     }
-
 }
