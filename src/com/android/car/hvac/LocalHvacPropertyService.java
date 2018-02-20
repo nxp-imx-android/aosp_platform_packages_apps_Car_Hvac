@@ -58,6 +58,9 @@ public class LocalHvacPropertyService {
     private static final int DEFAULT_FAN_DIRECTION = 2;
     private static final float DEFAULT_DRIVER_TEMP = 16;
     private static final float DEFAULT_PASSENGER_TEMP = 25;
+    // Hardware specific value for the front seats
+    public static final int ZONE_ROW_1_ALL =
+            VehicleZone.ZONE_ROW_1_LEFT | VehicleZone.ZONE_ROW_1_RIGHT;
 
     private final List<CarPropertyConfig> mPropertyList;
     private final Map<Pair, Object> mProperties = new HashMap<>();
@@ -116,22 +119,22 @@ public class LocalHvacPropertyService {
 
     private void setupDefaultValues() {
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_HVAC_POWER_ON,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_POWER_ON);
+                ZONE_ROW_1_ALL), DEFAULT_POWER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_WINDOW_DEFROSTER_ON,
                 VehicleWindow.WINDOW_FRONT_WINDSHIELD), DEFAULT_DEFROSTER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_WINDOW_DEFROSTER_ON,
                 VehicleWindow.WINDOW_REAR_WINDSHIELD), DEFAULT_DEFROSTER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AIR_RECIRCULATION_ON,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_AIR_CIRCULATION_ON);
+                ZONE_ROW_1_ALL), DEFAULT_AIR_CIRCULATION_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AC_ON,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_AC_ON);
+                ZONE_ROW_1_ALL), DEFAULT_AC_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AUTOMATIC_MODE_ON,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_AUTO_MODE);
+                ZONE_ROW_1_ALL), DEFAULT_AUTO_MODE);
 
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_FAN_SPEED);
+                ZONE_ROW_1_ALL), DEFAULT_FAN_SPEED);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_DIRECTION,
-                VehicleZone.ZONE_ROW_1_ALL), DEFAULT_FAN_DIRECTION);
+                ZONE_ROW_1_ALL), DEFAULT_FAN_DIRECTION);
 
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_TEMP_SETPOINT,
                 DRIVER_ZONE_ID), DEFAULT_DRIVER_TEMP);

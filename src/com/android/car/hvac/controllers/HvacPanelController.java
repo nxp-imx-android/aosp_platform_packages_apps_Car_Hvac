@@ -147,10 +147,7 @@ public class HvacPanelController {
         mAutoOnDrawable = res.getDrawable(R.drawable.ic_auto_on);
 
         mDriverTemperatureBarExpanded = driverTemperatureExpanded;
-        mDriverTemperatureBarExpanded.setBarOnClickListener(mCollapseHvac);
-
         mPassengerTemperatureBarExpanded = passengerTemperatureExpanded;
-        mPassengerTemperatureBarExpanded.setBarOnClickListener(mCollapseHvac);
 
         mDriverTemperatureBarExpanded.setCloseButtonOnClickListener(mCollapseHvac);
         mPassengerTemperatureBarExpanded.setCloseButtonOnClickListener(mCollapseHvac);
@@ -168,7 +165,9 @@ public class HvacPanelController {
         mPanel = mContainer.findViewById(R.id.hvac_center_panel);
 
         mHvacFanControlBackground = mPanel.findViewById(R.id.fan_control_bg);
-        mPanel.setOnClickListener(mCollapseHvac);
+        // set clickable so that clicks are not forward to the mContainer. This way a miss click
+        // does not close the UI
+        mPanel.setClickable(true);
 
         // Set up top row buttons
         mPanelTopRow = (HvacPanelRow) mContainer.findViewById(R.id.top_row);
