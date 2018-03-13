@@ -26,6 +26,8 @@
     <!-- Required to use the TYPE_DISPLAY_OVERLAY layout param for the overlay hvac ui-->
     <uses-permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW" />
 
+    <protected-broadcast android:name="android.car.intent.action.TOGGLE_HVAC_CONTROLS" />
+
     <application android:label="@string/hvac_label"
         android:icon="@drawable/ic_launcher_hvac"
         android:persistent="true">
