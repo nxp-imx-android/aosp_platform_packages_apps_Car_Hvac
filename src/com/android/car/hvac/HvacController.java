@@ -60,10 +60,10 @@ public class HvacController extends Service {
      */
     public static abstract class Callback {
 
-        public void onPassengerTemperatureChange(float temp) {
+        public void onPassengerTemperatureChange(CarPropertyValue propValue) {
         }
 
-        public void onDriverTemperatureChange(float temp) {
+        public void onDriverTemperatureChange(CarPropertyValue propValue) {
         }
 
         public void onFanSpeedChange(int position) {
@@ -211,7 +211,7 @@ public class HvacController extends Service {
                             handleFanSpeedUpdate(areaId, getValue(val));
                             break;
                         case CarHvacManager.ID_ZONED_TEMP_SETPOINT:
-                            handleTempUpdate(areaId, getValue(val));
+                            handleTempUpdate(val);
                             break;
                         case CarHvacManager.ID_WINDOW_DEFROSTER_ON:
                             handleDefrosterUpdate(areaId, getValue(val));
@@ -243,6 +243,10 @@ public class HvacController extends Service {
     @SuppressWarnings("unchecked")
     public static <E> E getValue(CarPropertyValue propertyValue) {
         return (E) propertyValue.getValue();
+    }
+
+    public static boolean isAvailable(CarPropertyValue propertyValue) {
+        return propertyValue.getStatus() == CarPropertyValue.STATUS_AVAILABLE;
     }
 
     void handleHvacPowerOn(boolean isOn) {
@@ -355,11 +359,14 @@ public class HvacController extends Service {
         }
     }
 
-    private void handleTempUpdate(int zone, float temp) {
-        boolean shouldPropagate = mDataStore.shouldPropagateTempUpdate(zone, temp);
+    private void handleTempUpdate(CarPropertyValue value) {
+        final int zone = value.getAreaId();
+        final float temp = (Float)value.getValue();
+        final boolean available = value.getStatus() == CarPropertyValue.STATUS_AVAILABLE;
+        boolean shouldPropagate = mDataStore.shouldPropagateTempUpdate(zone, temp, available);
         if (Log.isLoggable(TAG, Log.DEBUG)) {
             Log.d(TAG, "Temp Update, zone: " + zone + " temp: " + temp +
-                    " should propagate: " + shouldPropagate);
+                "available: " + available + " should propagate: " + shouldPropagate);
         }
         if (shouldPropagate) {
             int userTemperature =  mPolicy.hardwareToUserTemp(temp);
@@ -367,10 +374,10 @@ public class HvacController extends Service {
                 for (int i = 0; i < mCallbacks.size(); i++) {
                     if (zone == VehicleZone.ZONE_ROW_1_LEFT) {
                         mCallbacks.get(i)
-                                .onDriverTemperatureChange(userTemperature);
+                                .onDriverTemperatureChange(value);
                     } else {
                         mCallbacks.get(i)
-                                .onPassengerTemperatureChange(userTemperature);
+                                .onPassengerTemperatureChange(value);
                     }
                 }
             }
@@ -435,11 +442,35 @@ public class HvacController extends Service {
         return mPolicy;
     }
 
+    public boolean isTemperatureControlAvailable(int zone) {
+        if (mHvacManager != null) {
+            try {
+                return mHvacManager.isPropertyAvailable(
+                        CarHvacManager.ID_ZONED_TEMP_SETPOINT, zone);
+            } catch (android.car.CarNotConnectedException e) {
+                Log.e(TAG, "Car not connected in isTemperatureControlAvailable");
+            }
+        }
+
+        return false;
+    }
+
+    public boolean isDriverTemperatureControlAvailable() {
+        return isTemperatureControlAvailable(DRIVER_ZONE_ID);
+    }
+
+    public boolean isPassengerTemperatureControlAvailable() {
+        return isTemperatureControlAvailable(PASSENGER_ZONE_ID);
+    }
+
     private void fetchTemperature(int zone) {
         if (mHvacManager != null) {
             try {
-                mDataStore.setTemperature(zone, mHvacManager.getFloatProperty(
-                        CarHvacManager.ID_ZONED_TEMP_SETPOINT, zone));
+                float value = mHvacManager.getFloatProperty(
+                    CarHvacManager.ID_ZONED_TEMP_SETPOINT, zone);
+                boolean available = mHvacManager.isPropertyAvailable(
+                    CarHvacManager.ID_ZONED_TEMP_SETPOINT, zone);
+                mDataStore.setTemperature(zone, value, available);
             } catch (android.car.CarNotConnectedException e) {
                 Log.e(TAG, "Car not connected in fetchTemperature");
             }
@@ -463,13 +494,14 @@ public class HvacController extends Service {
     }
 
     public void setTemperature(final int zone, final float temperature) {
-        mDataStore.setTemperature(zone, temperature);
         final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
             protected Void doInBackground(Void... unused) {
                 if (mHvacManager != null) {
                     try {
                         mHvacManager.setFloatProperty(
                                 CarHvacManager.ID_ZONED_TEMP_SETPOINT, zone, temperature);
+                        // if the set() succeeds, consider the property available
+                        mDataStore.setTemperature(zone, temperature, true);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setTemperature");
                     } catch (Exception e) {

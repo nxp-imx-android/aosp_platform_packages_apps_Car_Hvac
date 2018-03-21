@@ -301,10 +301,15 @@ public class HvacPanelController {
                 transitionState(STATE_FULL_EXPANDED, STATE_COLLAPSED);
             }
 
-            mDriverTemperatureBarExpanded.setIsOn(mHvacIsOn);
-            mPassengerTemperatureBarExpanded.setIsOn(mHvacIsOn);
-            mDriverTemperatureBarCollapsed.setIsOn(mHvacIsOn);
-            mPassengerTemperatureBarCollapsed.setIsOn(mHvacIsOn);
+            final boolean isDriverTempOn = mHvacController.isDriverTemperatureControlAvailable();
+
+            final boolean isPassengerTempOn =
+                    mHvacController.isPassengerTemperatureControlAvailable();
+
+            mDriverTemperatureBarExpanded.setIsOn(isDriverTempOn);
+            mDriverTemperatureBarCollapsed.setIsOn(isDriverTempOn);
+            mPassengerTemperatureBarExpanded.setIsOn(isPassengerTempOn);
+            mPassengerTemperatureBarCollapsed.setIsOn(isPassengerTempOn);
         }
     };
 
