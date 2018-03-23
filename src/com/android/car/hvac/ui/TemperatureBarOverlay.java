@@ -23,6 +23,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.drawable.GradientDrawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -289,6 +290,7 @@ public class TemperatureBarOverlay extends FrameLayout {
         }
     };
 
+
     private void changeTemperatureColor(int startColor, int endColor) {
         if (endColor != startColor) {
             ValueAnimator animator = ValueAnimator.ofArgb(startColor, endColor);
@@ -303,24 +305,41 @@ public class TemperatureBarOverlay extends FrameLayout {
     private final View.OnClickListener temperatureClickListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            int startColor = getTemperatureColor(mTemperature);
+            synchronized (this) {
+                if (!mIsOn) {
+                    Log.d("HvacTempBar", "setting temperature not available");
+                    return;
+                }
+                int startColor = getTemperatureColor(mTemperature);
 
-            if (v == mIncreaseButton && mTemperature < MAX_TEMPERATURE) {
-                mTemperature++;
-            } else if (v == mDecreaseButton && mTemperature > MIN_TEMPERATURE) {
-                mTemperature--;
-            }
-            int endColor = getTemperatureColor(mTemperature);
-            changeTemperatureColor(startColor, endColor);
+                if (v == mIncreaseButton && mTemperature < MAX_TEMPERATURE) {
+                    mTemperature++;
+                    Log.d("HvacTempBar", "increased temperature to " + mTemperature);
+                } else if (v == mDecreaseButton && mTemperature > MIN_TEMPERATURE) {
+                    mTemperature--;
+                    Log.d("HvacTempBar", "decreased temperature to " + mTemperature);
+                } else {
+                    Log.d("HvacTempBar", "key not recognized");
+                }
+                int endColor = getTemperatureColor(mTemperature);
+                changeTemperatureColor(startColor, endColor);
 
-            mText.setText(getContext().getString(R.string.hvac_temperature_template, mTemperature));
-            mFloatingText.setText(getContext()
+                mText.setText(
+                    getContext().getString(R.string.hvac_temperature_template, mTemperature));
+                mFloatingText.setText(getContext()
                     .getString(R.string.hvac_temperature_template, mTemperature));
-            mListener.onTemperatureChanged(mTemperature);
+                mListener.onTemperatureChanged(mTemperature);
+            }
         }
     };
 
+    public void setAvailable(boolean available) {
+        Log.d("HvacTempBar", "setAvailable(" + available + ")");
+        setIsOn(available);
+    }
+
     public void setTemperature(int temperature) {
+        Log.d("HvacTempBar", "setTemperature(" + temperature + ")");
         int startColor = getTemperatureColor(mTemperature);
         int endColor = getTemperatureColor(temperature);
         mTemperature = temperature;
@@ -332,14 +351,16 @@ public class TemperatureBarOverlay extends FrameLayout {
             temperatureString = String.valueOf(mTemperature);
         }
 
-        mText.setText(getContext().getString(R.string.hvac_temperature_template,
+        synchronized (this) {
+            mText.setText(getContext().getString(R.string.hvac_temperature_template,
                 temperatureString));
-        mFloatingText.setText(getContext()
+            mFloatingText.setText(getContext()
                 .getString(R.string.hvac_temperature_template, temperatureString));
 
-        // Only animate the color if the button is currently enabled.
-        if (mIsOn) {
-            changeTemperatureColor(startColor, endColor);
+            // Only animate the color if the button is currently enabled.
+            if (mIsOn) {
+                changeTemperatureColor(startColor, endColor);
+            }
         }
     }
 
@@ -348,19 +369,22 @@ public class TemperatureBarOverlay extends FrameLayout {
      * of the temperature.
      */
     public void setIsOn(boolean isOn) {
-        mIsOn = isOn;
-        GradientDrawable temperatureBall
+        synchronized (this) {
+            mIsOn = isOn;
+
+            GradientDrawable temperatureBall
                 = (GradientDrawable) mTemperatureBar.getBackground();
-        if (mIsOn) {
-            mFloatingText.setVisibility(VISIBLE);
-            mOffText.setVisibility(GONE);
-            temperatureBall.setColor(getTemperatureColor(mTemperature));
-            setAlpha(1.0f);
-        } else {
-            mOffText.setVisibility(VISIBLE);
-            mFloatingText.setVisibility(GONE);
-            temperatureBall.setColor(mOffColor);
-            setAlpha(.2f);
+            if (mIsOn) {
+                mFloatingText.setVisibility(VISIBLE);
+                mOffText.setVisibility(GONE);
+                temperatureBall.setColor(getTemperatureColor(mTemperature));
+                setAlpha(1.0f);
+            } else {
+                mOffText.setVisibility(VISIBLE);
+                mFloatingText.setVisibility(GONE);
+                temperatureBall.setColor(mOffColor);
+                setAlpha(.2f);
+            }
         }
     }
 
