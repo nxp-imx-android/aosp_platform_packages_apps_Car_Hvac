@@ -294,12 +294,7 @@ public class HvacPanelController {
 
         @Override
         public void onHvacPowerChange(boolean isOn) {
-            // When the HVAC Power is turned off, collapse the panel and fade the temperature
-            // bars. Also disable expanding the panel until power is back on.
             mHvacIsOn = isOn;
-            if (!mHvacIsOn && mCurrentState == STATE_FULL_EXPANDED) {
-                transitionState(STATE_FULL_EXPANDED, STATE_COLLAPSED);
-            }
 
             final boolean isDriverTempOn = mHvacController.isDriverTemperatureControlAvailable();
 
