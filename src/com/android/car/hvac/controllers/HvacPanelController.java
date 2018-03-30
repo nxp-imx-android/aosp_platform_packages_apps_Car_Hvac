@@ -21,6 +21,8 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.support.annotation.IntDef;
@@ -86,6 +88,8 @@ public class HvacPanelController {
     private SeatWarmerButton mDriverSeatWarmer;
     private SeatWarmerButton mPassengerSeatWarmer;
 
+    private ToggleButton mHvacPowerSwitch;
+
     private ToggleButton mAcButton;
     private ToggleButton mRecycleAirButton;
 
@@ -119,7 +123,6 @@ public class HvacPanelController {
     private SeatWarmerController mSeatWarmerController;
 
     private boolean mInAnimation;
-    private boolean mHvacIsOn;
 
     // TODO: read from shared pref
     private boolean mAutoMode;
@@ -202,6 +205,11 @@ public class HvacPanelController {
         mDriverSeatWarmer = (SeatWarmerButton) mContainer.findViewById(R.id.left_seat_heater);
         mPassengerSeatWarmer = (SeatWarmerButton) mContainer.findViewById(R.id.right_seat_heater);
 
+        mHvacPowerSwitch = (ToggleButton)mPanelBottomRow.findViewById(R.id.hvac_master_switch);
+        // TODO: this is not good UX design - just a placeholder
+        mHvacPowerSwitch.setToggleIcons(res.getDrawable(R.drawable.ac_master_switch_on),
+            res.getDrawable(R.drawable.ac_master_switch_off));
+
         if (!mShowCollapsed) {
             mDriverTemperatureBarCollapsed.setVisibility(View.INVISIBLE);
             mPassengerTemperatureBarCollapsed.setVisibility(View.INVISIBLE);
@@ -260,6 +268,9 @@ public class HvacPanelController {
 
         setAutoMode(mHvacController.getAutoModeState());
 
+        mHvacPowerSwitch.setIsOn(mHvacController.getHvacPowerState());
+        mHvacPowerSwitch.setToggleListener(isOn -> mHvacController.setHvacPowerState(isOn));
+
         mHvacController.registerCallback(mToggleButtonCallbacks);
         mToggleButtonCallbacks.onHvacPowerChange(mHvacController.getHvacPowerState());
     }
@@ -290,26 +301,6 @@ public class HvacPanelController {
         public void onAutoModeChange(boolean isOn) {
             mAutoMode = isOn;
             setAutoMode(mAutoMode);
-        }
-
-        @Override
-        public void onHvacPowerChange(boolean isOn) {
-            // When the HVAC Power is turned off, collapse the panel and fade the temperature
-            // bars. Also disable expanding the panel until power is back on.
-            mHvacIsOn = isOn;
-            if (!mHvacIsOn && mCurrentState == STATE_FULL_EXPANDED) {
-                transitionState(STATE_FULL_EXPANDED, STATE_COLLAPSED);
-            }
-
-            final boolean isDriverTempOn = mHvacController.isDriverTemperatureControlAvailable();
-
-            final boolean isPassengerTempOn =
-                    mHvacController.isPassengerTemperatureControlAvailable();
-
-            mDriverTemperatureBarExpanded.setIsOn(isDriverTempOn);
-            mDriverTemperatureBarCollapsed.setIsOn(isDriverTempOn);
-            mPassengerTemperatureBarExpanded.setIsOn(isPassengerTempOn);
-            mPassengerTemperatureBarCollapsed.setIsOn(isPassengerTempOn);
         }
     };
 
@@ -530,7 +521,7 @@ public class HvacPanelController {
     public View.OnClickListener mExpandHvac = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-             if (!mHvacIsOn || mInAnimation) {
+             if (mInAnimation) {
                 return;
             }
             if (mCurrentState != STATE_FULL_EXPANDED) {
