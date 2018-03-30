@@ -514,6 +514,27 @@ public class HvacController extends Service {
         task.execute();
     }
 
+    public void setHvacPowerState(final boolean state) {
+        final AsyncTask<Void, Void, Void> task = new AsyncTask<Void, Void, Void>() {
+            protected Void doInBackground(Void... unused) {
+                if (mHvacManager != null) {
+                    try {
+                        mHvacManager.setBooleanProperty(CarHvacManager.ID_ZONED_HVAC_POWER_ON,
+                            ZONE_ROW_1_ALL, state);
+                        // if the set() succeeds, consider the property available
+                        mDataStore.setHvacPowerState(state);
+                    } catch (android.car.CarNotConnectedException e) {
+                        Log.e(TAG, "Car not connected in setHvacPowerState");
+                    } catch (Exception e) {
+                        Log.e(TAG, "set power failed", e);
+                    }
+                }
+                return null;
+            }
+        };
+        task.execute();
+    }
+
     public void setDriverSeatWarmerLevel(int level) {
         setSeatWarmerLevel(DRIVER_ZONE_ID, level);
     }
