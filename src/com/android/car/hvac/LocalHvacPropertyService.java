@@ -17,7 +17,7 @@ package com.android.car.hvac;
 
 import android.car.VehicleAreaType;
 import android.car.VehicleWindow;
-import android.car.VehicleZone;
+import android.car.VehicleSeat;
 import android.car.hardware.CarPropertyConfig;
 import android.car.hardware.CarPropertyValue;
 import android.car.hardware.hvac.CarHvacManager;
@@ -38,8 +38,8 @@ import java.util.Map;
  * A local {@link ICarProperty} that is used to mock up data for HVAC.
  */
 public class LocalHvacPropertyService {
-    private static final int DRIVER_ZONE_ID = VehicleZone.ZONE_ROW_1_LEFT;
-    private static final int PASSENGER_ZONE_ID = VehicleZone.ZONE_ROW_1_RIGHT;
+    private static final int DRIVER_ZONE_ID = VehicleSeat.SEAT_ROW_1_LEFT;
+    private static final int PASSENGER_ZONE_ID = VehicleSeat.SEAT_ROW_1_RIGHT;
 
     private static final float MIN_TEMP = 16;
     private static final float MAX_TEMP = 32;
@@ -59,8 +59,8 @@ public class LocalHvacPropertyService {
     private static final float DEFAULT_DRIVER_TEMP = 16;
     private static final float DEFAULT_PASSENGER_TEMP = 25;
     // Hardware specific value for the front seats
-    public static final int ZONE_ROW_1_ALL =
-            VehicleZone.ZONE_ROW_1_LEFT | VehicleZone.ZONE_ROW_1_RIGHT;
+    public static final int SEAT_ROW_1_ALL =
+            VehicleSeat.SEAT_ROW_1_LEFT | VehicleSeat.SEAT_ROW_1_RIGHT;
 
     private final List<CarPropertyConfig> mPropertyList;
     private final Map<Pair, Object> mProperties = new HashMap<>();
@@ -69,12 +69,12 @@ public class LocalHvacPropertyService {
     public LocalHvacPropertyService() {
         CarPropertyConfig fanSpeedConfig = CarPropertyConfig.newBuilder(Integer.class,
                 CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT,
-                VehicleAreaType.VEHICLE_AREA_TYPE_ZONE)
+                VehicleAreaType.VEHICLE_AREA_TYPE_SEAT)
                 .addAreaConfig(DEFAULT_AREA_ID, MIN_FAN_SPEED, MAX_FAN_SPEED).build();
 
         CarPropertyConfig temperatureConfig = CarPropertyConfig.newBuilder(Float.class,
                 CarHvacManager.ID_ZONED_TEMP_SETPOINT,
-                VehicleAreaType.VEHICLE_AREA_TYPE_ZONE)
+                VehicleAreaType.VEHICLE_AREA_TYPE_SEAT)
                 .addAreaConfig(DEFAULT_AREA_ID, MIN_TEMP, MAX_TEMP).build();
 
         mPropertyList = new ArrayList<>(2);
@@ -119,22 +119,22 @@ public class LocalHvacPropertyService {
 
     private void setupDefaultValues() {
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_HVAC_POWER_ON,
-                ZONE_ROW_1_ALL), DEFAULT_POWER_ON);
+                SEAT_ROW_1_ALL), DEFAULT_POWER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_WINDOW_DEFROSTER_ON,
                 VehicleWindow.WINDOW_FRONT_WINDSHIELD), DEFAULT_DEFROSTER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_WINDOW_DEFROSTER_ON,
                 VehicleWindow.WINDOW_REAR_WINDSHIELD), DEFAULT_DEFROSTER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AIR_RECIRCULATION_ON,
-                ZONE_ROW_1_ALL), DEFAULT_AIR_CIRCULATION_ON);
+                SEAT_ROW_1_ALL), DEFAULT_AIR_CIRCULATION_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AC_ON,
-                ZONE_ROW_1_ALL), DEFAULT_AC_ON);
+                SEAT_ROW_1_ALL), DEFAULT_AC_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AUTOMATIC_MODE_ON,
-                ZONE_ROW_1_ALL), DEFAULT_AUTO_MODE);
+                SEAT_ROW_1_ALL), DEFAULT_AUTO_MODE);
 
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT,
-                ZONE_ROW_1_ALL), DEFAULT_FAN_SPEED);
+                SEAT_ROW_1_ALL), DEFAULT_FAN_SPEED);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_FAN_DIRECTION,
-                ZONE_ROW_1_ALL), DEFAULT_FAN_DIRECTION);
+                SEAT_ROW_1_ALL), DEFAULT_FAN_DIRECTION);
 
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_TEMP_SETPOINT,
                 DRIVER_ZONE_ID), DEFAULT_DRIVER_TEMP);
