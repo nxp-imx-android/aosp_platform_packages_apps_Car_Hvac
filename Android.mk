@@ -35,7 +35,9 @@ LOCAL_PRIVILEGED_MODULE := true
 
 LOCAL_STATIC_JAVA_LIBRARIES += jsr305
 
-LOCAL_STATIC_ANDROID_LIBRARIES := android-support-v4
+LOCAL_STATIC_ANDROID_LIBRARIES += \
+    android-support-car \
+    androidx.legacy_legacy-support-v4
 
 LOCAL_USE_AAPT2 := true
 
@@ -43,7 +45,6 @@ LOCAL_PROGUARD_ENABLED := disabled
 
 LOCAL_DEX_PREOPT := false
 
-include packages/apps/Car/libs/car-stream-ui-lib/car-stream-ui-lib.mk
 include packages/services/Car/car-support-lib/car-support.mk
 
 include $(BUILD_PACKAGE)

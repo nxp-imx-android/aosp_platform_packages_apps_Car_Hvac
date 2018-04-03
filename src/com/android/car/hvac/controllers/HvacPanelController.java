@@ -21,15 +21,15 @@ import android.animation.ObjectAnimator;
 import android.animation.ValueAnimator;
 import android.content.Context;
 import android.content.res.Resources;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.Handler;
-import android.support.annotation.IntDef;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.ImageView;
+
+import androidx.annotation.IntDef;
+
 import com.android.car.hvac.HvacController;
 import com.android.car.hvac.R;
 import com.android.car.hvac.ui.FanDirectionButtons;
