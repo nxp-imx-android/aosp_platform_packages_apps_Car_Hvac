@@ -18,7 +18,6 @@ package com.android.car.hvac;
 import android.app.Service;
 import android.car.VehicleSeat;
 import android.car.VehicleWindow;
-import android.car.VehicleZone;
 import android.car.hardware.CarPropertyConfig;
 import android.car.hardware.CarPropertyValue;
 import android.car.hardware.hvac.CarHvacManager;
@@ -52,7 +51,7 @@ public class HvacController extends Service {
     };
     // Hardware specific value for the front seats
     public static final int ZONE_ROW_1_ALL =
-            VehicleZone.ZONE_ROW_1_LEFT | VehicleZone.ZONE_ROW_1_RIGHT;
+            VehicleSeat.SEAT_ROW_1_LEFT | VehicleSeat.SEAT_ROW_1_RIGHT;
 
     /**
      * Callback for receiving updates from the hvac manager. A Callback can be
@@ -272,7 +271,7 @@ public class HvacController extends Service {
         if (shouldPropagate) {
             synchronized (mCallbacks) {
                 for (int i = 0; i < mCallbacks.size(); i++) {
-                    if (zone == VehicleZone.ZONE_ROW_1_LEFT) {
+                    if (zone == VehicleSeat.SEAT_ROW_1_LEFT) {
                         mCallbacks.get(i).onDriverSeatWarmerChange(level);
                     } else {
                         mCallbacks.get(i).onPassengerSeatWarmerChange(level);
@@ -372,7 +371,7 @@ public class HvacController extends Service {
             int userTemperature =  mPolicy.hardwareToUserTemp(temp);
             synchronized (mCallbacks) {
                 for (int i = 0; i < mCallbacks.size(); i++) {
-                    if (zone == VehicleZone.ZONE_ROW_1_LEFT) {
+                    if (zone == VehicleSeat.SEAT_ROW_1_LEFT) {
                         mCallbacks.get(i)
                                 .onDriverTemperatureChange(value);
                     } else {
