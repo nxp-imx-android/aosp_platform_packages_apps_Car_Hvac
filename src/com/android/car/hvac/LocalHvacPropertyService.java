@@ -15,9 +15,9 @@
  */
 package com.android.car.hvac;
 
+import android.car.VehicleAreaSeat;
 import android.car.VehicleAreaType;
-import android.car.VehicleWindow;
-import android.car.VehicleSeat;
+import android.car.VehicleAreaWindow;
 import android.car.hardware.CarPropertyConfig;
 import android.car.hardware.CarPropertyValue;
 import android.car.hardware.hvac.CarHvacManager;
@@ -38,8 +38,8 @@ import java.util.Map;
  * A local {@link ICarProperty} that is used to mock up data for HVAC.
  */
 public class LocalHvacPropertyService {
-    private static final int DRIVER_ZONE_ID = VehicleSeat.SEAT_ROW_1_LEFT;
-    private static final int PASSENGER_ZONE_ID = VehicleSeat.SEAT_ROW_1_RIGHT;
+    private static final int DRIVER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_LEFT;
+    private static final int PASSENGER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_RIGHT;
 
     private static final float MIN_TEMP = 16;
     private static final float MAX_TEMP = 32;
@@ -60,7 +60,7 @@ public class LocalHvacPropertyService {
     private static final float DEFAULT_PASSENGER_TEMP = 25;
     // Hardware specific value for the front seats
     public static final int SEAT_ROW_1_ALL =
-            VehicleSeat.SEAT_ROW_1_LEFT | VehicleSeat.SEAT_ROW_1_RIGHT;
+            VehicleAreaSeat.SEAT_ROW_1_LEFT | VehicleAreaSeat.SEAT_ROW_1_RIGHT;
 
     private final List<CarPropertyConfig> mPropertyList;
     private final Map<Pair, Object> mProperties = new HashMap<>();
@@ -121,9 +121,9 @@ public class LocalHvacPropertyService {
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_HVAC_POWER_ON,
                 SEAT_ROW_1_ALL), DEFAULT_POWER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_WINDOW_DEFROSTER_ON,
-                VehicleWindow.WINDOW_FRONT_WINDSHIELD), DEFAULT_DEFROSTER_ON);
+                VehicleAreaWindow.WINDOW_FRONT_WINDSHIELD), DEFAULT_DEFROSTER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_WINDOW_DEFROSTER_ON,
-                VehicleWindow.WINDOW_REAR_WINDSHIELD), DEFAULT_DEFROSTER_ON);
+                VehicleAreaWindow.WINDOW_REAR_WINDSHIELD), DEFAULT_DEFROSTER_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AIR_RECIRCULATION_ON,
                 SEAT_ROW_1_ALL), DEFAULT_AIR_CIRCULATION_ON);
         mProperties.put(new Pair<>(CarHvacManager.ID_ZONED_AC_ON,
