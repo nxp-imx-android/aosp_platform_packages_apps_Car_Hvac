@@ -16,8 +16,8 @@
 package com.android.car.hvac;
 
 import android.app.Service;
-import android.car.VehicleSeat;
-import android.car.VehicleWindow;
+import android.car.VehicleAreaSeat;
+import android.car.VehicleAreaWindow;
 import android.car.hardware.CarPropertyConfig;
 import android.car.hardware.CarPropertyValue;
 import android.car.hardware.hvac.CarHvacManager;
@@ -41,8 +41,8 @@ import javax.annotation.concurrent.GuardedBy;
 public class HvacController extends Service {
     private static final String DEMO_MODE_PROPERTY = "android.car.hvac.demo";
     private static final String TAG = "HvacController";
-    private static final int DRIVER_ZONE_ID = VehicleSeat.SEAT_ROW_1_LEFT;
-    private static final int PASSENGER_ZONE_ID = VehicleSeat.SEAT_ROW_1_RIGHT;
+    private static final int DRIVER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_LEFT;
+    private static final int PASSENGER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_RIGHT;
 
     public static final int[] AIRFLOW_STATES = new int[]{
             CarHvacManager.FAN_DIRECTION_FACE,
@@ -51,7 +51,7 @@ public class HvacController extends Service {
     };
     // Hardware specific value for the front seats
     public static final int ZONE_ROW_1_ALL =
-            VehicleSeat.SEAT_ROW_1_LEFT | VehicleSeat.SEAT_ROW_1_RIGHT;
+            VehicleAreaSeat.SEAT_ROW_1_LEFT | VehicleAreaSeat.SEAT_ROW_1_RIGHT;
 
     /**
      * Callback for receiving updates from the hvac manager. A Callback can be
@@ -271,7 +271,7 @@ public class HvacController extends Service {
         if (shouldPropagate) {
             synchronized (mCallbacks) {
                 for (int i = 0; i < mCallbacks.size(); i++) {
-                    if (zone == VehicleSeat.SEAT_ROW_1_LEFT) {
+                    if (zone == VehicleAreaSeat.SEAT_ROW_1_LEFT) {
                         mCallbacks.get(i).onDriverSeatWarmerChange(level);
                     } else {
                         mCallbacks.get(i).onPassengerSeatWarmerChange(level);
@@ -371,7 +371,7 @@ public class HvacController extends Service {
             int userTemperature =  mPolicy.hardwareToUserTemp(temp);
             synchronized (mCallbacks) {
                 for (int i = 0; i < mCallbacks.size(); i++) {
-                    if (zone == VehicleSeat.SEAT_ROW_1_LEFT) {
+                    if (zone == VehicleAreaSeat.SEAT_ROW_1_LEFT) {
                         mCallbacks.get(i)
                                 .onDriverTemperatureChange(value);
                     } else {
@@ -392,9 +392,9 @@ public class HvacController extends Service {
         if (shouldPropagate) {
             synchronized (mCallbacks) {
                 for (int i = 0; i < mCallbacks.size(); i++) {
-                    if (zone == VehicleWindow.WINDOW_FRONT_WINDSHIELD) {
+                    if (zone == VehicleAreaWindow.WINDOW_FRONT_WINDSHIELD) {
                         mCallbacks.get(i).onFrontDefrosterChange(defrosterState);
-                    } else if (zone == VehicleWindow.WINDOW_REAR_WINDSHIELD) {
+                    } else if (zone == VehicleAreaWindow.WINDOW_REAR_WINDSHIELD) {
                         mCallbacks.get(i).onRearDefrosterChange(defrosterState);
                     }
                 }
@@ -419,8 +419,8 @@ public class HvacController extends Service {
                 fetchTemperature(DRIVER_ZONE_ID);
                 fetchTemperature(PASSENGER_ZONE_ID);
                 fetchFanSpeed();
-                fetchDefrosterState(VehicleWindow.WINDOW_FRONT_WINDSHIELD);
-                fetchDefrosterState(VehicleWindow.WINDOW_REAR_WINDSHIELD);
+                fetchDefrosterState(VehicleAreaWindow.WINDOW_FRONT_WINDSHIELD);
+                fetchDefrosterState(VehicleAreaWindow.WINDOW_REAR_WINDSHIELD);
                 fetchAirflow(DRIVER_ZONE_ID);
                 fetchAirflow(PASSENGER_ZONE_ID);
                 fetchAcState();
@@ -623,19 +623,19 @@ public class HvacController extends Service {
     }
 
     public boolean getFrontDefrosterState() {
-        return mDataStore.getDefrosterState(VehicleWindow.WINDOW_FRONT_WINDSHIELD);
+        return mDataStore.getDefrosterState(VehicleAreaWindow.WINDOW_FRONT_WINDSHIELD);
     }
 
     public boolean getRearDefrosterState() {
-        return mDataStore.getDefrosterState(VehicleWindow.WINDOW_REAR_WINDSHIELD);
+        return mDataStore.getDefrosterState(VehicleAreaWindow.WINDOW_REAR_WINDSHIELD);
     }
 
     public void setFrontDefrosterState(boolean state) {
-        setDefrosterState(VehicleWindow.WINDOW_FRONT_WINDSHIELD, state);
+        setDefrosterState(VehicleAreaWindow.WINDOW_FRONT_WINDSHIELD, state);
     }
 
     public void setRearDefrosterState(boolean state) {
-        setDefrosterState(VehicleWindow.WINDOW_REAR_WINDSHIELD, state);
+        setDefrosterState(VehicleAreaWindow.WINDOW_REAR_WINDSHIELD, state);
     }
 
     public void setDefrosterState(final int zone, final boolean state) {
