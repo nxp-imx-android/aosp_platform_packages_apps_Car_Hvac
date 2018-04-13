@@ -21,7 +21,7 @@
         android:minSdkVersion="22"
         android:targetSdkVersion="23"/>
 
-    <uses-permission android:name="android.car.permission.ADJUST_CAR_CLIMATE" />
+    <uses-permission android:name="android.car.permission.CONTROL_CAR_CLIMATE" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <!-- Required to use the TYPE_DISPLAY_OVERLAY layout param for the overlay hvac ui-->
     <uses-permission android:name="android.permission.INTERNAL_SYSTEM_WINDOW" />

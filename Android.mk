@@ -33,10 +33,13 @@ LOCAL_MODULE_TAGS := optional
 
 LOCAL_PRIVILEGED_MODULE := true
 
-LOCAL_STATIC_JAVA_LIBRARIES += jsr305
+LOCAL_JAVA_LIBRARIES += android.car
+
+LOCAL_STATIC_JAVA_LIBRARIES += jsr305 \
+    android.support.car
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
-    android-support-car \
+    androidx.car_car \
     androidx.legacy_legacy-support-v4
 
 LOCAL_USE_AAPT2 := true
@@ -44,8 +47,6 @@ LOCAL_USE_AAPT2 := true
 LOCAL_PROGUARD_ENABLED := disabled
 
 LOCAL_DEX_PREOPT := false
-
-include packages/services/Car/car-support-lib/car-support.mk
 
 include $(BUILD_PACKAGE)
 
