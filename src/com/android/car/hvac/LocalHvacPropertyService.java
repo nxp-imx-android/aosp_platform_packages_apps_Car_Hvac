@@ -15,6 +15,13 @@
  */
 package com.android.car.hvac;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
 import android.car.VehicleAreaSeat;
 import android.car.VehicleAreaType;
 import android.car.VehicleAreaWindow;
@@ -27,12 +34,6 @@ import android.car.hardware.property.ICarPropertyEventListener;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Pair;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A local {@link ICarProperty} that is used to mock up data for HVAC.
@@ -87,12 +88,12 @@ public class LocalHvacPropertyService {
 
     private final IBinder mCarPropertyService = new ICarProperty.Stub(){
         @Override
-        public void registerListener(ICarPropertyEventListener listener) throws RemoteException {
+        public void registerListener(int propId, float rate, ICarPropertyEventListener listener) throws RemoteException {
             mListeners.add(listener);
         }
 
         @Override
-        public void unregisterListener(ICarPropertyEventListener listener) throws RemoteException {
+        public void unregisterListener(int propId, ICarPropertyEventListener listener) throws RemoteException {
             mListeners.remove(listener);
         }
 
@@ -110,8 +111,9 @@ public class LocalHvacPropertyService {
         public void setProperty(CarPropertyValue prop) throws RemoteException {
             mProperties.put(new Pair(prop.getPropertyId(), prop.getAreaId()), prop.getValue());
             for (ICarPropertyEventListener listener : mListeners) {
-                listener.onEvent(
-                        new CarPropertyEvent(CarPropertyEvent.PROPERTY_EVENT_PROPERTY_CHANGE, prop));
+                LinkedList<CarPropertyEvent> l = new LinkedList<>();
+                l.add(new CarPropertyEvent(CarPropertyEvent.PROPERTY_EVENT_PROPERTY_CHANGE, prop));
+                listener.onEvent(l);
             }
         }
     };
