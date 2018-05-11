@@ -58,8 +58,8 @@ public class TemperatureBarOverlay extends FrameLayout {
     private static final float BUTTON_ALPHA_EXPANDED = 1.0f;
 
     private static final int DEFAULT_TEMPERATURE = 32;
-    private static final int MAX_TEMPERATURE = 85;
-    private static final int MIN_TEMPERATURE = 60;
+    private static final int MAX_TEMPERATURE = 256;
+    private static final int MIN_TEMPERATURE = 0;
 
     private String mInvalidTemperature;
 
