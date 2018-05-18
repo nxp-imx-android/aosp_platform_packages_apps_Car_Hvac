@@ -16,6 +16,7 @@
 package com.android.car.hvac;
 
 import android.app.Service;
+import android.car.Car;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -26,6 +27,7 @@ import android.content.res.Resources;
 import android.graphics.PixelFormat;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.UserHandle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
@@ -137,7 +139,9 @@ public class HvacUiService extends Service {
         addViewToWindowManagerAndTrack(windowSizeTest, testparams);
         IntentFilter filter = new IntentFilter();
         filter.addAction(CAR_INTENT_ACTION_TOGGLE_HVAC_CONTROLS);
-        registerReceiver(mBroadcastReceiver, filter);
+        // Register receiver such that any user with climate control permission can call it.
+        registerReceiverAsUser(mBroadcastReceiver, UserHandle.ALL, filter,
+                Car.PERMISSION_CONTROL_CAR_CLIMATE, null);
     }
 
 
