@@ -41,8 +41,10 @@ import javax.annotation.concurrent.GuardedBy;
 public class HvacController extends Service {
     private static final String DEMO_MODE_PROPERTY = "android.car.hvac.demo";
     private static final String TAG = "HvacController";
-    private static final int DRIVER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_LEFT;
-    private static final int PASSENGER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_RIGHT;
+    private static final int DRIVER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_LEFT |
+            VehicleAreaSeat.SEAT_ROW_2_LEFT | VehicleAreaSeat.SEAT_ROW_2_CENTER;
+    private static final int PASSENGER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_RIGHT |
+            VehicleAreaSeat.SEAT_ROW_2_RIGHT;
 
     public static final int[] AIRFLOW_STATES = new int[]{
             CarHvacManager.FAN_DIRECTION_FACE,
@@ -50,8 +52,9 @@ public class HvacController extends Service {
             (CarHvacManager.FAN_DIRECTION_FACE | CarHvacManager.FAN_DIRECTION_FLOOR)
     };
     // Hardware specific value for the front seats
-    public static final int ZONE_ROW_1_ALL =
-            VehicleAreaSeat.SEAT_ROW_1_LEFT | VehicleAreaSeat.SEAT_ROW_1_RIGHT;
+    public static final int SEAT_ALL = VehicleAreaSeat.SEAT_ROW_1_LEFT |
+            VehicleAreaSeat.SEAT_ROW_1_RIGHT | VehicleAreaSeat.SEAT_ROW_2_LEFT |
+            VehicleAreaSeat.SEAT_ROW_2_CENTER | VehicleAreaSeat.SEAT_ROW_2_RIGHT;
 
     /**
      * Callback for receiving updates from the hvac manager. A Callback can be
@@ -519,7 +522,7 @@ public class HvacController extends Service {
                 if (mHvacManager != null) {
                     try {
                         mHvacManager.setBooleanProperty(CarHvacManager.ID_ZONED_HVAC_POWER_ON,
-                            ZONE_ROW_1_ALL, state);
+                            SEAT_ALL, state);
                         // if the set() succeeds, consider the property available
                         mDataStore.setHvacPowerState(state);
                     } catch (android.car.CarNotConnectedException e) {
@@ -564,7 +567,7 @@ public class HvacController extends Service {
 
     private void fetchFanSpeed() {
         if (mHvacManager != null) {
-            int zone = ZONE_ROW_1_ALL; // Car specific workaround.
+            int zone = SEAT_ALL; // Car specific workaround.
             try {
                 mDataStore.setFanSpeed(mHvacManager.getIntProperty(
                         CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT, zone));
@@ -586,7 +589,7 @@ public class HvacController extends Service {
 
             protected Void doInBackground(Void... unused) {
                 if (mHvacManager != null) {
-                    int zone = ZONE_ROW_1_ALL; // Car specific workaround.
+                    int zone = SEAT_ALL; // Car specific workaround.
                     try {
                         if (Log.isLoggable(TAG, Log.DEBUG)) {
                             Log.d(TAG, "Setting fanspeed to: " + fanSpeed);
@@ -660,7 +663,7 @@ public class HvacController extends Service {
         if (mHvacManager != null) {
             try {
                 mDataStore.setAcState(mHvacManager.getBooleanProperty(CarHvacManager.ID_ZONED_AC_ON,
-                        ZONE_ROW_1_ALL));
+                        SEAT_ALL));
             } catch (android.car.CarNotConnectedException e) {
                 Log.e(TAG, "Car not connected in fetchAcState");
             }
@@ -678,7 +681,7 @@ public class HvacController extends Service {
                 if (mHvacManager != null) {
                     try {
                         mHvacManager.setBooleanProperty(CarHvacManager.ID_ZONED_AC_ON,
-                                ZONE_ROW_1_ALL, state);
+                                SEAT_ALL, state);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setAcState");
                     }
@@ -701,7 +704,7 @@ public class HvacController extends Service {
 
     private void fetchAirflow(int zone) {
         if (mHvacManager != null) {
-            zone = ZONE_ROW_1_ALL; // Car specific workaround.
+            zone = SEAT_ALL; // Car specific workaround.
             try {
                 int val = mHvacManager.getIntProperty(CarHvacManager.ID_ZONED_FAN_DIRECTION, zone);
                 mDataStore.setAirflow(zone, fanPositionToAirflowIndex(val));
@@ -717,14 +720,14 @@ public class HvacController extends Service {
 
     public void setAirflowIndex(final int zone, final int index) {
         mDataStore.setAirflow(zone, index);
-        int override = ZONE_ROW_1_ALL; // Car specific workaround.
+        int override = SEAT_ALL; // Car specific workaround.
         int val = AIRFLOW_STATES[index];
         setFanDirection(override, val);
     }
 
     public void setFanDirection(final int direction) {
-        mDataStore.setAirflow(ZONE_ROW_1_ALL, direction);
-        setFanDirection(ZONE_ROW_1_ALL, direction);
+        mDataStore.setAirflow(SEAT_ALL, direction);
+        setFanDirection(SEAT_ALL, direction);
     }
 
     private void setFanDirection(final int zone, final int direction) {
@@ -750,7 +753,7 @@ public class HvacController extends Service {
             try {
                 mDataStore.setAirCirculationState(mHvacManager
                         .getBooleanProperty(CarHvacManager.ID_ZONED_AIR_RECIRCULATION_ON,
-                                ZONE_ROW_1_ALL));
+                                SEAT_ALL));
             } catch (android.car.CarNotConnectedException e) {
                 Log.e(TAG, "Car not connected in fetchAirCirculationState");
             }
@@ -769,7 +772,7 @@ public class HvacController extends Service {
                     try {
                         mHvacManager.setBooleanProperty(
                                 CarHvacManager.ID_ZONED_AIR_RECIRCULATION_ON,
-                                ZONE_ROW_1_ALL, state);
+                                SEAT_ALL, state);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setAcState");
                     }
@@ -791,7 +794,7 @@ public class HvacController extends Service {
                 if (mHvacManager != null) {
                     try {
                         mHvacManager.setBooleanProperty(CarHvacManager.ID_ZONED_AUTOMATIC_MODE_ON,
-                                ZONE_ROW_1_ALL, state);
+                                SEAT_ALL, state);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setAutoModeState");
                     }
@@ -810,7 +813,7 @@ public class HvacController extends Service {
         if (mHvacManager != null) {
             try {
                 mDataStore.setHvacPowerState(mHvacManager.getBooleanProperty(
-                        CarHvacManager.ID_ZONED_HVAC_POWER_ON, ZONE_ROW_1_ALL));
+                        CarHvacManager.ID_ZONED_HVAC_POWER_ON, SEAT_ALL));
             } catch (android.car.CarNotConnectedException e) {
                 Log.e(TAG, "Car not connected in fetchHvacPowerState");
             }
