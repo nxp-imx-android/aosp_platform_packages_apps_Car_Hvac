@@ -39,7 +39,6 @@ import java.util.List;
 import javax.annotation.concurrent.GuardedBy;
 
 public class HvacController extends Service {
-    private static final String DEMO_MODE_PROPERTY = "android.car.hvac.demo";
     private static final String TAG = "HvacController";
     private static final int DRIVER_ZONE_ID = VehicleAreaSeat.SEAT_ROW_1_LEFT |
             VehicleAreaSeat.SEAT_ROW_2_LEFT | VehicleAreaSeat.SEAT_ROW_2_CENTER;
@@ -120,12 +119,6 @@ public class HvacController extends Service {
     public void onCreate() {
         super.onCreate();
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) {
-            if (SystemProperties.getBoolean(DEMO_MODE_PROPERTY, false)) {
-                IBinder binder = (new LocalHvacPropertyService()).getCarPropertyService();
-                initHvacManager(new CarHvacManager(binder, this, new Handler()));
-                return;
-            }
-
             mCarApiClient = Car.createCar(this, mCarConnectionCallback);
             mCarApiClient.connect();
         }
