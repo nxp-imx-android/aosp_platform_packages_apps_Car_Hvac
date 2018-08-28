@@ -36,7 +36,7 @@ LOCAL_PRIVILEGED_MODULE := true
 LOCAL_JAVA_LIBRARIES += android.car
 
 LOCAL_STATIC_JAVA_LIBRARIES += jsr305 \
-    android.support.car
+    android.car
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
     androidx.car_car \
