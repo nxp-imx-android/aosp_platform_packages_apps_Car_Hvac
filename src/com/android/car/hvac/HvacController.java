@@ -16,21 +16,22 @@
 package com.android.car.hvac;
 
 import android.app.Service;
+import android.car.Car;
+import android.car.CarNotConnectedException;
 import android.car.VehicleAreaSeat;
 import android.car.VehicleAreaWindow;
 import android.car.hardware.CarPropertyConfig;
 import android.car.hardware.CarPropertyValue;
 import android.car.hardware.hvac.CarHvacManager;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.SystemProperties;
-import android.support.car.Car;
-import android.support.car.CarConnectionCallback;
-import android.support.car.CarNotConnectedException;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -117,7 +118,7 @@ public class HvacController extends Service {
     public void onCreate() {
         super.onCreate();
         if (getPackageManager().hasSystemFeature(PackageManager.FEATURE_AUTOMOTIVE)) {
-            mCarApiClient = Car.createCar(this, mCarConnectionCallback);
+            mCarApiClient = Car.createCar(this, mCarServiceConnection);
             mCarApiClient.connect();
         }
     }
@@ -162,20 +163,20 @@ public class HvacController extends Service {
             properties = mHvacManager.getPropertyList();
             mPolicy = new HvacPolicy(HvacController.this, properties);
             mHvacManager.registerCallback(mHardwareCallback);
-        } catch (android.car.CarNotConnectedException e) {
+        } catch (CarNotConnectedException e) {
             Log.e(TAG, "Car not connected in HVAC");
         }
 
     }
 
-    private final CarConnectionCallback mCarConnectionCallback =
-            new CarConnectionCallback() {
+    private final ServiceConnection mCarServiceConnection =
+            new ServiceConnection() {
                 @Override
-                public void onConnected(Car car) {
+                public void onServiceConnected(ComponentName name, IBinder service) {
                     synchronized (mHvacManagerReady) {
                         try {
                             initHvacManager((CarHvacManager) mCarApiClient.getCarManager(
-                                    android.car.Car.HVAC_SERVICE));
+                                    Car.HVAC_SERVICE));
                             mHvacManagerReady.notifyAll();
                         } catch (CarNotConnectedException e) {
                             Log.e(TAG, "Car not connected in onServiceConnected");
@@ -184,7 +185,7 @@ public class HvacController extends Service {
                 }
 
                 @Override
-                public void onDisconnected(Car car) {
+                public void onServiceDisconnected(ComponentName name) {
                 }
             };
 
