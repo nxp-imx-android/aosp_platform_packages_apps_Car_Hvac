@@ -31,7 +31,6 @@ import android.os.AsyncTask;
 import android.os.Binder;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.SystemProperties;
 import android.util.Log;
 
 import java.util.ArrayList;
