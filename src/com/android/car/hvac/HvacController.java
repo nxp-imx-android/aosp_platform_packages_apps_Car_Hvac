@@ -372,14 +372,17 @@ public class HvacController extends Service {
         }
         if (shouldPropagate) {
             int userTemperature =  mPolicy.hardwareToUserTemp(temp);
+            CarPropertyValue carPropertyValue =
+                new CarPropertyValue(value.getPropertyId(), value.getAreaId(), value.getStatus(),
+                        value.getTimestamp(), (float)userTemperature);
             synchronized (mCallbacks) {
                 for (int i = 0; i < mCallbacks.size(); i++) {
                     if (zone == VehicleAreaSeat.SEAT_ROW_1_LEFT) {
                         mCallbacks.get(i)
-                                .onDriverTemperatureChange(value);
+                                .onDriverTemperatureChange(carPropertyValue);
                     } else {
                         mCallbacks.get(i)
-                                .onPassengerTemperatureChange(value);
+                                .onPassengerTemperatureChange(carPropertyValue);
                     }
                 }
             }
