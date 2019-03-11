@@ -604,6 +604,8 @@ public class HvacController extends Service {
                                 CarHvacManager.ID_ZONED_FAN_SPEED_SETPOINT, zone);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setFanSpeed");
+                    } catch (IllegalStateException e) {
+                        Log.e(TAG, "IllegalStateException: Car can not setFanSpeed in current state: power off");
                     }
                 }
                 return null;
@@ -742,6 +744,8 @@ public class HvacController extends Service {
                                 CarHvacManager.ID_ZONED_FAN_DIRECTION, zone, direction);
                     } catch (android.car.CarNotConnectedException e) {
                         Log.e(TAG, "Car not connected in setAirflowIndex");
+                    } catch (IllegalStateException e) {
+                        Log.e(TAG, "IllegalStateException: Car can not setFanDirection in current state: power off");
                     }
                 }
                 return null;
