@@ -529,11 +529,11 @@ public class HvacController extends Service {
     }
 
     public void setDriverSeatWarmerLevel(int level) {
-        setSeatWarmerLevel(DRIVER_ZONE_ID, level);
+        setSeatWarmerLevel(VehicleAreaSeat.SEAT_ROW_1_LEFT, level);
     }
 
     public void setPassengerSeatWarmerLevel(int level) {
-        setSeatWarmerLevel(PASSENGER_ZONE_ID, level);
+        setSeatWarmerLevel(VehicleAreaSeat.SEAT_ROW_1_RIGHT, level);
     }
 
     public void setSeatWarmerLevel(final int zone, final int level) {
