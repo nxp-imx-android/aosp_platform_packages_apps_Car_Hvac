@@ -38,8 +38,7 @@ LOCAL_PRIVILEGED_MODULE := true
 
 LOCAL_JAVA_LIBRARIES += android.car
 
-LOCAL_STATIC_JAVA_LIBRARIES += jsr305 \
-    android.car
+LOCAL_STATIC_JAVA_LIBRARIES += jsr305
 
 LOCAL_STATIC_ANDROID_LIBRARIES += \
     androidx.legacy_legacy-support-v4
