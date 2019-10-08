@@ -24,8 +24,7 @@ android_app {
     libs: ["android.car"],
     static_libs: [
         "jsr305",
-        "android.support.car",
-        "androidx.car_car",
+        "android.car",
         "androidx.legacy_legacy-support-v4",
     ],
     optimize: {
