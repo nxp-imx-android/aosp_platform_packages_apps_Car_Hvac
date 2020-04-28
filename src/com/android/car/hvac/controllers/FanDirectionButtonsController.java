@@ -16,7 +16,6 @@
 package com.android.car.hvac.controllers;
 
 import android.car.hardware.hvac.CarHvacManager;
-import android.util.Log;
 import android.util.SparseIntArray;
 
 import com.android.car.hvac.HvacController;
@@ -28,11 +27,11 @@ import com.android.car.hvac.ui.FanDirectionButtons;
  * constants in the vehicle hardware.
  */
 public class FanDirectionButtonsController {
-    private static final String TAG = "FanDirectionButtonsController";
+    private final static int FAN_DIRECTION_COUNT = 4;
+
     private final FanDirectionButtons mFanDirectionButtons;
     private final HvacController mHvacController;
-    private final SparseIntArray mFanDirectionMap =
-            new SparseIntArray(FanDirectionButtons.FAN_DIRECTION_COUNT);
+    private final SparseIntArray mFanDirectionMap = new SparseIntArray(FAN_DIRECTION_COUNT);
 
     public FanDirectionButtonsController(FanDirectionButtons speedBar, HvacController controller) {
         mFanDirectionButtons = speedBar;
@@ -52,7 +51,6 @@ public class FanDirectionButtonsController {
         mFanDirectionMap.put(FanDirectionButtons.FAN_DIRECTION_FLOOR_DEFROSTER,
                 (CarHvacManager.FAN_DIRECTION_DEFROST | CarHvacManager.FAN_DIRECTION_FLOOR));
         mFanDirectionButtons.setFanDirectionClickListener(mListener);
-        mHvacController.registerCallback(mCallback);
     }
 
     private final FanDirectionButtons.FanDirectionClickListener mListener
@@ -60,18 +58,6 @@ public class FanDirectionButtonsController {
         @Override
         public void onFanDirectionClicked(@FanDirectionButtons.FanDirection int direction) {
             mHvacController.setFanDirection(mFanDirectionMap.get(direction));
-        }
-    };
-
-    private HvacController.Callback mCallback = new HvacController.Callback() {
-        @Override
-        public void onFanDirectionChange(int direction) {
-            int index = mFanDirectionMap.indexOfValue(direction);
-            if (index == -1) {
-                Log.w(TAG, "Unexpected fan direction: " + direction);
-                return;
-            }
-            mFanDirectionButtons.setFanDirection(mFanDirectionMap.keyAt(index));
         }
     };
 }
